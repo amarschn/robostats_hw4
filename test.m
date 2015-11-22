@@ -7,11 +7,18 @@ m = WeanMap('../data/map/map_file.mat');
 im = zeros(800,800);
 
 % Set initial position of single particle (x, y, theta)
-P = [4000, 4000, pi/1.7];
+P = [4000, 4000, 0];
+% This is the rotation necessary to rotate the laser points into the
+% robot's odometry frame
+Rotation = pi/2;
+Rot = [cos(Rotation), -sin(Rotation); sin(Rotation), cos(Rotation)];
 
 % This is the sigma of the two sensor modalities
 odom_sigma = 0.1;
 laser_sigma = 0.01;
+
+
+robot_pts = 5 * [-10 -10; -10, 10; 10 10; 10 0; 0 0; 10 0; 10 -10; -10 -10];
 
 for d = 1:numel(Data)
     D = Data{d};
@@ -27,14 +34,14 @@ for d = 1:numel(Data)
     
     % Find the difference between the old position and the new position
     % according to odom data.
-    dx = (xd - D.x);
-    dy = (yd - D.y);
-    dth = (thd - D.th);
+    dx = (D.x - xd);
+    dy = (D.y - yd);
+    dth = (D.th - thd);
     
     % Rotate the change in (x,y) by some rotation matrix. this could be
     % done offline. Is this supposed to be constant though? I think so...
-    theta = pi/1.7;
-    R = [cos(theta), -sin(theta); sin(theta), cos(theta)];
+    
+    R = [cos(Rotation), -sin(Rotation); sin(Rotation), cos(Rotation)];
     rotated_delta = [dx, dy] * R;
     dx = rotated_delta(1);
     dy = rotated_delta(2);
@@ -49,8 +56,8 @@ for d = 1:numel(Data)
     gdth = normrnd(dth, odom_sigma);
     
     % Update the particle position
-    P = P + [gdx, gdy, gdth];
-
+    P = P + [dx, dy, dth];
+    
     % Display laser data
     if D.c == 'L'
         % This is the particle laser pose, which is simply offset from the particle
@@ -58,36 +65,33 @@ for d = 1:numel(Data)
         % odom pose and laser pose at this timestamp
         L_pose = P + ([D.x_l, D.y_l, D.th_l] - [xd, yd, thd]);
         
-        % Get the laser range points, and fit them to the image size
-        L_points = [D.r' .* Cos', D.r' .* Sin'];
+        % Get the laser range points in (x, y) coordinates, where the robot
+        % is pointing to the +y axis of the robot
+        % Rotate the laser range points so that they are centered about the
+        % +x axis of the robot, rather than the +y axis
+        L_points = [D.r' .* Cos', D.r' .* Sin'] * Rot;
+        
         
         % Rotation
-        theta = L_pose(3);
-        R = [cos(theta), -sin(theta); sin(theta), cos(theta)];
-        L_points = L_points * R;
+%         theta = L_pose(3);
+%         R = [cos(theta), -sin(theta); sin(theta), cos(theta)];
+%         L_points = L_points * R;
         
         
-        % Translate and rotate the image points to the current laser pose
+        % Translate the image points to the current laser pose
         % Translation (x, y)
-        L_points(:,1) = L_points(:,1) + L_pose(1);
-        L_points(:,2) = L_points(:,2) + L_pose(2);
+%         L_points(:,1) = L_points(:,1) + L_pose(1);
+%         L_points(:,2) = L_points(:,2) + L_pose(2);
         
+        clf;
+        hold on;
+        r_pts = robot_pts;
+        plot(r_pts(:,1), r_pts(:,2), 'b');
+        plot(L_points(:,1), L_points(:,2), 'rx');
+        axis([-2000,2000,-2000,2000]);
+        drawnow;
+%         m.visualizeRobotAndLaser(P(1), P(2), L_points(:,1), L_points(:,2));
         
-        % Scale points
-        L_points = ceil(round(L_points/10));
-        L_points(L_points < 1) = 1;
-        L_points(L_points > 800) = 800;
-        
-        % Set the coordinates of the image so we can see them
-        idx = sub2ind(size(im), L_points(:,2), L_points(:,1));
-        
-        %         L_pose = round(L_pose(1:2)/10);
-        %         idx = sub2ind(size(im), L_pose(2), L_pose(1));
-        %
-        %         im(idx) = 1;
-        %         imshow(im);
-        %         im(idx) = 0;
-        m.visualizeRobotPose(P(2), P(1));
     end
     
     

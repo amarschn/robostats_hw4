@@ -1,4 +1,4 @@
-function [ world_data ] = genWorldData( odom_data, T, R )
+function [ world_data ] = genAllWorldData( odom_data, T, R )
     %genWorldData generates world-frame based data given odometry-frame based position
     %data and some transform (initial world position and the rotation of
     %the odometry frame

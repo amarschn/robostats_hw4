@@ -1,4 +1,4 @@
-function [ odom_data ] = genOdomData( Data, noise, display )
+function [ odom_data ] = genOdomData( Data, display )
     %odomFramePose This function returns the robot pose and the laser
     %points in the odometry frame (robot starts at (0,0) in the odometry
     %frame.
@@ -12,15 +12,13 @@ function [ odom_data ] = genOdomData( Data, noise, display )
     % Load the stored trig values
     load '../data/trig.mat';
     
-    if display  
+    if display
         vid = VideoWriter('odom_vid.avi','Uncompressed AVI');
         open(vid);
         
     end
     
-    % This is the sigma of the two sensor modalities
-    odom_sigma = 0.1;
-    laser_sigma = 0.01;
+    
     
     % This will contain the robot pose and laser points
     odom_data = cell(size(Data));
@@ -42,18 +40,21 @@ function [ odom_data ] = genOdomData( Data, noise, display )
             y_init = D.y;
         end
         
-        % Find the difference between the old position and the new position
+        
+        %         if noise
+        %             x = normrnd((D.x - x_init), odom_sigma);
+        %             y = normrnd((D.y - y_init), odom_sigma);
+        %             th = normrnd((D.th), odom_sigma);
+        %         else
+        %
+        %         end
+        
+        % Find the difference between the first position and the new position
         % according to odom data. If we want noise then we use the normrnd
         % function
-        if noise
-            x = normrnd((D.x - x_init), odom_sigma);
-            y = normrnd((D.y - y_init), odom_sigma);
-            th = normrnd((D.th), odom_sigma);
-        else
-            x = (D.x - x_init);
-            y = (D.y - y_init);
-            th = D.th;
-        end
+        x = (D.x - x_init);
+        y = (D.y - y_init);
+        th = D.th;
         
         % Update the robots pose
         robot_pose = [x, y, th];
@@ -73,6 +74,9 @@ function [ odom_data ] = genOdomData( Data, noise, display )
             O.laser_pose = laser_pose;
             
             % Calculate the laser points about the y+ axis
+            %             if noise
+            %                 D.r = normrnd(D.r, laser_sigma);
+            %             end
             laser_points = [D.r' .* Cos', D.r' .* Sin'];
             
             % Rotate the laser points by -90 deg so that they are centered
@@ -82,14 +86,14 @@ function [ odom_data ] = genOdomData( Data, noise, display )
             
             % Rotate the laser points
             las_rot = [cos(laser_pose(3)), -sin(laser_pose(3));
-                       sin(laser_pose(3)), cos(laser_pose(3))];
+                sin(laser_pose(3)), cos(laser_pose(3))];
             laser_points = las_rot * laser_points';
             
             % Add the pose of the laser to the laser points
             p1 = laser_pose(1) * ones(1, length(laser_points));
             p2 = laser_pose(2) * ones(1,length(laser_points));
             laser_points = laser_points + [p1; p2];
-
+            
             % Store the laser points
             O.laser_points = laser_points;
             
@@ -108,7 +112,7 @@ function [ odom_data ] = genOdomData( Data, noise, display )
             
             % Rotate and then translate the robot visualization box by the robot's angle from the odom frame
             rob_rot = [cos(robot_pose(3)), -sin(robot_pose(3));
-                       sin(robot_pose(3)), cos(robot_pose(3))];
+                sin(robot_pose(3)), cos(robot_pose(3))];
             rob_tran = repmat([robot_pose(1); robot_pose(2)], 1, length(robot));
             r = rob_rot * robot';
             r = r + rob_tran;
@@ -117,15 +121,15 @@ function [ odom_data ] = genOdomData( Data, noise, display )
             las_tran = repmat([laser_pose(1); laser_pose(2)], 1, length(laser));
             l = las_rot * laser';
             l = l + las_tran;
-           
+            
             % Plots
             plot(r(1,:), r(2,:), 'b'); % Display the robot
             plot(l(1,:), l(2,:), 'g'); % Display the laser
             plot(laser_points(1,:), laser_points(2,:), 'rx'); % Display the laser points
             
             legend(strcat('Frame: ', num2str(d)),...
-                   strcat('Robot Angle: ', num2str(rad2deg(robot_pose(3)))), ...
-                   strcat('Laser Angle: ', num2str(rad2deg(laser_pose(3)))));
+                strcat('Robot Angle: ', num2str(rad2deg(robot_pose(3)))), ...
+                strcat('Laser Angle: ', num2str(rad2deg(laser_pose(3)))));
             axis([-2000, 2000, -2000, 2000]);
             drawnow;
             writeVideo(vid, getframe);

@@ -40,7 +40,7 @@ function [ ] = pathVisualizer( Data )
 %         legend(strcat('Frame: ', num2str(d)),...
 %             strcat('Robot Angle: ', num2str(rad2deg(robot_pose(3)))), ...
 %             strcat('Laser Angle: ', num2str(rad2deg(laser_pose(3)))));
-        axis([-2000, 2000, -2000, 2000]);
+        axis([0, 6000, 0, 6000]);
         drawnow;
     end
     

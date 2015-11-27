@@ -1,0 +1,10 @@
+clear; clc; close all;
+
+map = WeanMap('../../data/map/map_file.mat');
+% data to be used
+data = 'robotdata1.log';
+% initial range of possible particles
+range = linspace(3500,4500,1000);
+%
+
+particleFilter(map, data, num_particles, range, resample_thresh, o_std, l_std);

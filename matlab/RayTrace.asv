@@ -1,0 +1,43 @@
+clc; clear; close all;
+
+map = WeanMap('../../data/map/map_file.mat');
+
+% Generate the cosine and sine transformations for every angle
+Cos = zeros(360,1);
+Sin = zeros(360,1);
+for i = 1:360
+    Cos(i) = cosd(i);
+    Sin(i) = sind(i);
+end
+
+ray_trace = zeros(length(map.grid(:)),360,2);
+
+open_blocks = find(map.grid > 0.9);
+
+
+% For each block, we will trace 360 rays
+for i = 1:length(open_blocks)
+    
+    idx = open_blocks(i);
+    
+    [r,c] = ind2sub(size(map.grid), idx);
+    
+    % Get the x and y position of the current map point
+    x = c * map.res;
+    y = (map.y_max - r) * map.res;
+    
+    % the rays matrix will store the x and y position for each ray's
+    % endpoint
+    rays = zeros(1,360,2);
+    
+    % for every angle in 1 degree increments
+    for th = 1:360
+        xr = 0;
+        yr = 0;
+        dxr = Cos(th);
+        dyr = Sin(th);
+        while 
+    end
+    
+    ray_trace(idx,:) = rays;
+end

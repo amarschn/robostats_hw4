@@ -4,7 +4,7 @@ function [ update_data ] = genParticleUpdateData( Data )
     
     update_data = cell(size(Data));
     
-    load '../data/trig.mat';
+    load '../../data/trig.mat';
     
     for d = 1:numel(Data)
         

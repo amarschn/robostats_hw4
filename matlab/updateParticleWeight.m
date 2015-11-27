@@ -7,9 +7,9 @@ function [ P ] = updateParticleWeight( P, D, map )
     outOfBounds = (robot_occ < 0.1);
     
     if outOfBounds
-        P.weight = P.weight / 1000;
+        P.weight = P.weight / 10000;
     else
-        P.weight = P.weight + robot_occ;
+        P.weight = P.weight + 100 * robot_occ;
         if D.type == 'L'
             laser_occ = map.getMapOcc(P.laser_points(1,1:45), P.laser_points(2,1:45)) + map.getMapOcc(P.laser_points(1,136:180), P.laser_points(2,136:180));
             P.weight = P.weight + 1/(sum(laser_occ) + 0.1);

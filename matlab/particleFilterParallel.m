@@ -1,9 +1,11 @@
-function [ ] = particleFilter( map, data, num_particles_initial, num_particles_final, resample_thresh, o_std, l_std )
+function [ ] = particleFilterParallel( map, data, num_particles_initial, num_particles_final, range, resample_thresh, o_std, l_std )
     %particleFilter runs a particle filter and creates a gif of the
     %particle visualization
     % map : class structure of the map to be used
     % data : string name of the log file to be used
     % num_particles : the number of particles to use in the particle filter
+    % range : range of acceptable x and y coordinates for starting
+    %         locations of the particles
     % resample_thresh : the weight ratio threshold of resampling the
     %                   particles
     % o_std : the standard deviation of the odometry sensor model
@@ -25,20 +27,16 @@ function [ ] = particleFilter( map, data, num_particles_initial, num_particles_f
             load '../../data/log/Data1.mat';
     end
     
-    
-    fprintf('Generating update data for %s...\n', data);
     % Generate the update data
     D = genParticleUpdateData(Data);
     
     % Generate the initial particles, all with the initial theta given by
     % the dataset
-    fprintf('Generating %d particles...\n', num_particles_initial);
     Particles = genParticles(map, num_particles_initial, Data{1}.th);
     
     
     i = 1;
     
-    fprintf('Updating particle weights...\n');
     for d = 1:numel(D)
         
         % Update the particle positions and weights
@@ -46,18 +44,18 @@ function [ ] = particleFilter( map, data, num_particles_initial, num_particles_f
         
         
         if mod(d,10) == 0 || d == 1
-            fprintf('Data point: %d\n', d);
+            d
             images(:,:,i) = map.visualizeParticles(Particles, 0);
             i = i + 1;
         end
         
         % Change the number of particles to something more reasonable
-        if d == 5
-            Particles = particleSieve(Particles, num_particles_final);
+        if d == 1
+            [Particles] = particleSieve(Particles, num_particles_final);
         end
     end
     
-    fprintf('Generating .GIF file of particle filter...\n');
+    
     
     %% This saves a gif file and adds to the csv file listing all attributes of the visualizations
     
@@ -91,6 +89,7 @@ function [ ] = particleFilter( map, data, num_particles_initial, num_particles_f
     fprintf('Data log: %s\n', data);
     fprintf('Number of initial particles: %d\n', num_particles_initial);
     fprintf('Number of final particles: %d\n', num_particles_initial);
+    fprintf('Range of acceptable values: %d - %d\n', min(range), max(range));
     fprintf('Re-sampling weight ratio threshold: %d\n', resample_thresh);
     fprintf('Odometry sensor model standard deviation: %.3f\n', o_std);
     fprintf('Laser sensor model standard deviation: %.3f\n', l_std);

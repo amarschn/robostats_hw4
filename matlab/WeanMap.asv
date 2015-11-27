@@ -9,7 +9,6 @@ classdef WeanMap < handle
         r_x; % The real "width" of the map in cm
         grid = []; % Matrix that contains the map
         image = []; % Matrix that contains the map image
-        ray_traces;
     end
     
     methods
@@ -67,7 +66,7 @@ classdef WeanMap < handle
         end
         
         % Convert world position to map indices
-        function [idx, grid_x, grid_y] = convertPosition(weanMap, x, y)
+        function [idx] = convertPosition(weanMap, x, y)
             if sum(x > weanMap.x_max * weanMap.res) || ...
                     sum(y > weanMap.y_max * weanMap.res) || ...
                     sum(x < 1) || ...
@@ -90,15 +89,11 @@ classdef WeanMap < handle
             im = imagesc(flipud(weanMap.grid));
             hold on;
             
-            [py, px] = ind2sub(size(weanMap.grid), p);
-            plot(px, py, 'bo');
-            
-            for i = 1:360
-                [~, rx, ry] = weanMap.convertPosition(x(i), y(i));
-                plot(rx, ry, 'rx');
-            end
+            plot(
+            plot(x, y, 'rx');
             
             set(gca,'ydir','normal');
+            idx = weanMap.convertPosition(x, y);
         end
         
         % Return occupation status of grid, which will be in [0,1] or -1 to
